@@ -46,7 +46,7 @@ priority_topics, etc.) — only include what you want to override.
 Settings → Pages → Source: **Deploy from a branch** → Branch: **main**,
 folder: **/docs** → Save.
 
-Dashboard URL: https://.github.io//
+Dashboard URL: https://<user_handle>.github.io/<repo_name>/
 
 
 ## 6. Run it once
