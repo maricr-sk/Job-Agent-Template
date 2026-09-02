@@ -19,15 +19,7 @@ Sign up: https://developer.adzuna.com/
 app_id: ______________
 app_key: ______________
 
-
-### 3. Add repo secrets
-Settings → Secrets and variables → Actions → New repository secret:
-
-ADZUNA_APP_ID = ______________ (from step 2)
-ADZUNA_APP_KEY = ______________ (from step 2)
-PROFILE_OVERRIDE_JSON = ______________ (the JSON from step 3)
-
-### 4. Fill in your real profile (kept private)
+### 3. Fill in your real profile (kept private)
 Copy this, fill in your values, keep it somewhere for step 4 — do not
 commit it to the repo:
 ```json
@@ -40,6 +32,14 @@ commit it to the repo:
 ```
 Any key from `config/profile.py` can go in here (skills, target_roles,
 priority_topics, etc.) — only include what you want to override.
+
+
+### 4. Add repo secrets
+Settings → Secrets and variables → Actions → New repository secret:
+
+ADZUNA_APP_ID = ______________ (from step 2)
+ADZUNA_APP_KEY = ______________ (from step 2)
+PROFILE_OVERRIDE_JSON = ______________ (the JSON from step 3)
 
 
 ### 5. Enable GitHub Pages
