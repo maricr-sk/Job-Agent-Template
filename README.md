@@ -1,5 +1,5 @@
 # Job-Agent-Template
-Agent that uses ur personalized values to search job DBs like Adzuna, github repos, and greenhouse to aggregate them in one place (hopefully more efficiently than LinkedIn)
+Scheduled pipeline that uses ur personalized values to search job DBs like Adzuna, github repos, and greenhouse to aggregate them in one place (hopefully more efficiently than LinkedIn). Can be integrated with the LLM of your choice to ask for a 0–100 fit score plus a one-line reason, instead of (or in addition to) keyword matching.
 
 ## Job Agent — Setup
 
