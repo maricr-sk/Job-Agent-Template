@@ -70,4 +70,14 @@ PROFILE = {
     # 0 by the time it's this many days old.
     "recency_boost_max": 15,
     "recency_boost_window_days": 14,
+
+    # How many of the top keyword-ranked postings get a second pass through
+    # the Claude API for real semantic judgment (see src/claude_scorer.py).
+    # No-op if ANTHROPIC_API_KEY / resume_text aren't set.
+    "claude_rescore_top_n": 100,
+
+    # Your actual resume text, for the Claude re-scoring pass to judge fit
+    # against. Leave blank here — set it in your PROFILE_OVERRIDE_JSON
+    # secret, never in this tracked file.
+    "resume_text": "",
 }
