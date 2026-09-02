@@ -1,25 +1,24 @@
-# Job-Agent-Template
-Scheduled pipeline that uses ur personalized values to search job DBs like Adzuna, github repos, and greenhouse to aggregate them in one place (hopefully more efficiently than LinkedIn). Can be integrated with the LLM of your choice to ask for a 0–100 fit score plus a one-line reason, instead of (or in addition to) keyword matching.
-
-## Job Agent — Setup
+# Job Agent — Setup
 
 Fill in the blanks, in order. Takes about 15 minutes.
 
-### 1. Push to GitHub
-
+## 1. Push to GitHub
+```
 cd job-agent
 git init
 git add .
 git commit -m "Initial job agent"
-gh repo create <repo_name> --public --source=. --push
+gh repo create ______________ --public --source=. --push
+```
 
-### 2. Get a free Adzuna API key
+## 2. Get a free Adzuna API key
 Sign up: https://developer.adzuna.com/
+```
+app_id:  ______________
+app_key: ______________
+```
 
-app_id: ______________  
-app_key: ______________  
-
-### 3. Fill in your real profile (kept private)
+## 3. Fill in your real profile (kept private)
 Copy this, fill in your values, keep it somewhere for step 4 — do not
 commit it to the repo:
 ```json
@@ -33,23 +32,22 @@ commit it to the repo:
 Any key from `config/profile.py` can go in here (skills, target_roles,
 priority_topics, etc.) — only include what you want to override.
 
-
-### 4. Add repo secrets
+## 4. Add repo secrets
 Settings → Secrets and variables → Actions → New repository secret:
+```
+ADZUNA_APP_ID        = ______________  (from step 2)
+ADZUNA_APP_KEY        = ______________  (from step 2)
+PROFILE_OVERRIDE_JSON = ______________  (the JSON from step 3)
+```
 
-ADZUNA_APP_ID = ______________ (from step 2)  
-ADZUNA_APP_KEY = ______________ (from step 2)  
-PROFILE_OVERRIDE_JSON = ______________ (the JSON from step 3)  
-
-
-### 5. Enable GitHub Pages
+## 5. Enable GitHub Pages
 Settings → Pages → Source: **Deploy from a branch** → Branch: **main**,
 folder: **/docs** → Save.
+```
+Dashboard URL: https://______________.github.io/______________/
+```
 
-Dashboard URL: https://<user_handle>.github.io/<repo_name>/
-
-
-### 6. Run it once
+## 6. Run it once
 Actions tab → **Daily job scan** → **Run workflow**. Wait ~30 sec, then
 refresh the dashboard URL — it should have real data.
 
@@ -57,3 +55,24 @@ refresh the dashboard URL — it should have real data.
 
 That's it — it reruns on its own daily. To change the time, edit the
 cron line in `.github/workflows/daily-job-scan.yml`.
+
+## Optional: AI-judged scoring instead of just keyword matching
+By default, ranking is pure keyword matching (free, no setup). To have
+the top 100 matches also get judged by Claude for actual fit against
+your resume:
+```
+1. Get a key: https://console.anthropic.com  (enable billing — cost at
+   this volume is cents to low dollars/month using Haiku, the default)
+2. Add resume_text to the JSON from step 3 above:
+     "resume_text": "______________"   (paste your real resume text)
+3. Add one more repo secret:
+     ANTHROPIC_API_KEY = ______________
+```
+No other change needed — `src/main.py` picks it up automatically next
+run. Jobs that get an AI score show it as the primary number with an
+"AI" tag, plus a one-line reason; the keyword score stays visible
+underneath. Everything past the top 100 stays keyword-scored either way.
+
+Want the fuller walkthrough (how scoring works, adding company boards,
+running it locally)? Just ask — this file is deliberately just the setup
+steps.

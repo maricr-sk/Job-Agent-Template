@@ -97,6 +97,21 @@
     padding-top: 2px;
   }
   .score.low { color: var(--ink-soft); }
+  .score-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .score-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
   .job-main a {
     font-size: 17px;
     font-weight: 600;
@@ -108,6 +123,17 @@
     font-size: 13.5px;
     color: var(--ink-soft);
     margin-top: 3px;
+  }
+  .claude-reason {
+    font-size: 14px;
+    color: var(--ink);
+    margin-top: 8px;
+    line-height: 1.45;
+  }
+  .keyword-note {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 6px;
   }
   .reasons {
     margin-top: 8px;
@@ -189,19 +215,30 @@ function saveAppliedSet(set) {
 function renderJobRow(j, applied) {
   const div = document.createElement('div');
   div.className = 'job' + (applied ? ' applied' : '');
-  const scoreClass = j.score < 20 ? 'low' : '';
+  const hasClaudeScore = typeof j.claude_score === 'number';
+  const displayScore = hasClaudeScore ? j.claude_score : j.score;
+  const scoreClass = displayScore < 20 ? 'low' : '';
   const reasons = (j.match_reasons || []).slice(0, 3)
     .map(r => `<span>${r}</span>`).join('');
   const ageLabel = (j.posted_days_ago === 0) ? 'posted today'
     : (j.posted_days_ago === 1) ? 'posted 1 day ago'
     : (typeof j.posted_days_ago === 'number') ? `posted ${j.posted_days_ago} days ago`
     : '';
+  const claudeBlurb = hasClaudeScore && j.claude_reason
+    ? `<div class="claude-reason">${j.claude_reason}</div>` : '';
+  const keywordNote = hasClaudeScore
+    ? `<div class="keyword-note">keyword score: ${Math.round(j.score)}</div>` : '';
   div.innerHTML = `
-    <div class="score ${scoreClass}">${Math.round(j.score)}</div>
+    <div class="score-block">
+      <div class="score ${scoreClass}">${Math.round(displayScore)}</div>
+      ${hasClaudeScore ? '<div class="score-tag">AI</div>' : ''}
+    </div>
     <div class="job-main">
       <a href="${j.url}" target="_blank" rel="noopener">${j.title}</a>
       <div class="job-meta">${j.company} &middot; ${j.location || 'Location not listed'} &middot; via ${j.source}${ageLabel ? ' &middot; ' + ageLabel : ''}</div>
+      ${claudeBlurb}
       <div class="reasons">${reasons}</div>
+      ${keywordNote}
     </div>
     <input type="checkbox" class="applied-check" title="Mark applied" ${applied ? 'checked' : ''} />
   `;
