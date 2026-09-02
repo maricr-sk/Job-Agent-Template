@@ -72,7 +72,3 @@ No other change needed — `src/main.py` picks it up automatically next
 run. Jobs that get an AI score show it as the primary number with an
 "AI" tag, plus a one-line reason; the keyword score stays visible
 underneath. Everything past the top 100 stays keyword-scored either way.
-
-Want the fuller walkthrough (how scoring works, adding company boards,
-running it locally)? Just ask — this file is deliberately just the setup
-steps.
