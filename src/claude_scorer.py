@@ -15,7 +15,7 @@ import json
 import os
 import re
 
-MODEL = os.environ.get("CLAUDE_SCORE_MODEL", "claude-haiku-4-5-20251001")
+MODEL = os.environ.get("CLAUDE_SCORE_MODEL", "claude-haiku-4-5")
 BATCH_SIZE = 12
 
 SYSTEM_PROMPT = (
@@ -70,16 +70,42 @@ def score_with_claude(jobs: list[dict], resume_text: str) -> list[dict]:
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": prompt}],
             )
-            text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
-            results = _extract_json(text)
-            for r in results:
-                idx = r.get("id")
-                if idx is not None and 0 <= idx < len(batch):
-                    batch[idx]["claude_score"] = r.get("score")
-                    batch[idx]["claude_reason"] = r.get("reason")
-        except Exception as e:
-            print(f"  [claude-scorer] batch starting at index {batch_start} failed: {e}")
+        except (anthropic.AuthenticationError, anthropic.PermissionDeniedError, anthropic.NotFoundError) as e:
+            # bad key / bad model id — won't fix itself on the next batch, stop burning calls
+            print(f"  [claude-scorer] fatal config error, aborting: {e}")
+            break
+        except anthropic.RateLimitError as e:
+            print(f"  [claude-scorer] batch at index {batch_start} rate-limited, skipping: {e}")
             continue
+        except anthropic.APIStatusError as e:
+            print(f"  [claude-scorer] batch at index {batch_start} server error {e.status_code}, skipping: {e}")
+            continue
+        except anthropic.APIConnectionError as e:
+            print(f"  [claude-scorer] batch at index {batch_start} connection error, skipping: {e}")
+            continue
+
+        text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
+        try:
+            results = _extract_json(text)
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"  [claude-scorer] batch at index {batch_start} returned unparseable JSON, skipping: {e}")
+            continue
+
+        if not isinstance(results, list):
+            print(f"  [claude-scorer] batch at index {batch_start} returned non-list JSON, skipping")
+            continue
+
+        for r in results:
+            idx = r.get("id")
+            if idx is None:
+                continue
+            try:
+                idx = int(idx)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= idx < len(batch):
+                batch[idx]["claude_score"] = r.get("score")
+                batch[idx]["claude_reason"] = r.get("reason")
 
     scored_count = sum(1 for j in jobs if j.get("claude_score") is not None)
     print(f"  [claude-scorer] scored {scored_count}/{len(jobs)} postings")
