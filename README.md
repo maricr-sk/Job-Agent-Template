@@ -44,7 +44,7 @@ PROFILE_OVERRIDE_JSON = ______________  (the JSON from step 3)
 Settings → Pages → Source: **Deploy from a branch** → Branch: **main**,
 folder: **/docs** → Save.
 ```
-Dashboard URL: https://______________.github.io/______________/
+Dashboard URL: https://<user_handle>.github.io/<repo_name>/
 ```
 
 ## 6. Run it once
