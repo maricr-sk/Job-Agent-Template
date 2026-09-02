@@ -1,0 +1,41 @@
+# Companies to pull postings from directly via their ATS's public API.
+#
+# HOW TO FIND A COMPANY'S TOKEN:
+#   1. Find their careers page. It usually redirects to one of:
+#        boards.greenhouse.io/<token>
+#        jobs.lever.co/<token>
+#        jobs.ashbyhq.com/<token>
+#   2. The path segment after the domain is the token — put it below.
+#   3. Not sure which ATS a company uses, or want to test a guess before
+#      committing? Run: python scripts/check_company.py <slug-guess>
+#      It tries all three APIs and tells you which one responds.
+#
+# A wrong or defunct token just gets skipped and logged — it won't break
+# the run for the other companies. Add as many as you want; there's no
+# per-company setup beyond adding a line here. Some examples are added.
+
+greenhouse:
+  - linkedin
+  - doordash
+  - stripe
+
+# Larger tech companies (Microsoft, Google/DeepMind, Amazon, Salesforce
+# Oracle) mostly run their own custom ATS, not
+# Greenhouse/Lever/Ashby — they won't show up here even with the right
+# slug. They're reached instead through the Adzuna queries in
+# src/main.py, which now include tech search terms.
+
+lever:
+  - netflix
+  - shopify
+  - spotify
+  - klarna
+
+ashby:
+  - openai
+  - figma
+  - anthropic
+  - notion
+  - ramp
+  - vanta
+  - duolingo

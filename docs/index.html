@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Job Matches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #14181A;
+    --panel: #1C2124;
+    --ink: #E7EAE4;
+    --ink-soft: #93998F;
+    --teal: #5CB3A0;
+    --teal-dim: #1E3833;
+    --gold: #D9A455;
+    --line: #30363A;
+    --danger: #C77361;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  header h1 {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 34px;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+  header p {
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+    font-size: 15px;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .controls select, .controls input {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+  .controls input::placeholder { color: var(--ink-soft); }
+  .controls input { flex: 1; min-width: 160px; }
+  .count {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+  }
+  .section-label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 32px 0 4px;
+    padding-top: 12px;
+  }
+  .job {
+    border-top: 1px solid var(--line);
+    padding: 20px 0;
+    display: grid;
+    grid-template-columns: 48px 1fr 22px;
+    gap: 16px;
+    align-items: start;
+  }
+  .job:last-child { border-bottom: 1px solid var(--line); }
+  .job.applied {
+    opacity: 0.45;
+  }
+  .job.applied .job-main a {
+    text-decoration: line-through;
+    color: var(--ink-soft);
+  }
+  .score {
+    font-family: 'Source Serif 4', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--teal);
+    text-align: center;
+    line-height: 1;
+    padding-top: 2px;
+  }
+  .score.low { color: var(--ink-soft); }
+  .job-main a {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .job-main a:hover { color: var(--teal); text-decoration: underline; }
+  .job-meta {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+  .reasons {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .reasons span {
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--teal-dim);
+    color: var(--teal);
+  }
+  .applied-check {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    accent-color: var(--teal);
+    cursor: pointer;
+  }
+  .empty {
+    padding: 60px 0;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  footer {
+    margin-top: 40px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Daily matches</h1>
+    <p id="subhead">Loading&hellip;</p>
+  </header>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="Filter by keyword, company, or location" />
+    <select id="sourceFilter">
+      <option value="">All sources</option>
+    </select>
+    <select id="minScore">
+      <option value="0">Any score</option>
+      <option value="30">Score 30+</option>
+      <option value="50">Score 50+</option>
+      <option value="70">Score 70+</option>
+    </select>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div id="list"></div>
+  <footer id="footer"></footer>
+</div>
+
+<script>
+let allJobs = [];
+const STORAGE_KEY = 'job-agent-applied';
+
+function jobId(j) {
+  return j.url || (j.company + '|' + j.title);
+}
+
+function getAppliedSet() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function saveAppliedSet(set) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
+}
+
+function renderJobRow(j, applied) {
+  const div = document.createElement('div');
+  div.className = 'job' + (applied ? ' applied' : '');
+  const scoreClass = j.score < 20 ? 'low' : '';
+  const reasons = (j.match_reasons || []).slice(0, 3)
+    .map(r => `<span>${r}</span>`).join('');
+  const ageLabel = (j.posted_days_ago === 0) ? 'posted today'
+    : (j.posted_days_ago === 1) ? 'posted 1 day ago'
+    : (typeof j.posted_days_ago === 'number') ? `posted ${j.posted_days_ago} days ago`
+    : '';
+  div.innerHTML = `
+    <div class="score ${scoreClass}">${Math.round(j.score)}</div>
+    <div class="job-main">
+      <a href="${j.url}" target="_blank" rel="noopener">${j.title}</a>
+      <div class="job-meta">${j.company} &middot; ${j.location || 'Location not listed'} &middot; via ${j.source}${ageLabel ? ' &middot; ' + ageLabel : ''}</div>
+      <div class="reasons">${reasons}</div>
+    </div>
+    <input type="checkbox" class="applied-check" title="Mark applied" ${applied ? 'checked' : ''} />
+  `;
+  const checkbox = div.querySelector('.applied-check');
+  checkbox.addEventListener('change', () => {
+    const set = getAppliedSet();
+    const id = jobId(j);
+    if (checkbox.checked) set.add(id); else set.delete(id);
+    saveAppliedSet(set);
+    render();
+  });
+  return div;
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const source = document.getElementById('sourceFilter').value;
+  const minScore = parseFloat(document.getElementById('minScore').value);
+  const appliedSet = getAppliedSet();
+
+  const filtered = allJobs.filter(j => {
+    if (source && j.source !== source) return false;
+    if (j.score < minScore) return false;
+    if (q) {
+      const hay = (j.title + ' ' + j.company + ' ' + j.location).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('count').textContent =
+    filtered.length + ' of ' + allJobs.length + ' matches shown';
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">Nothing matches those filters. Try widening them.</div>';
+    return;
+  }
+
+  const active = filtered.filter(j => !appliedSet.has(jobId(j)));
+  const applied = filtered.filter(j => appliedSet.has(jobId(j)));
+
+  for (const j of active) {
+    list.appendChild(renderJobRow(j, false));
+  }
+
+  if (applied.length > 0) {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = `Applied (${applied.length})`;
+    list.appendChild(label);
+    for (const j of applied) {
+      list.appendChild(renderJobRow(j, true));
+    }
+  }
+}
+
+fetch('jobs.json?_=' + Date.now())
+  .then(r => r.json())
+  .then(data => {
+    allJobs = data.jobs || [];
+    const generated = new Date(data.generated_at);
+    document.getElementById('subhead').textContent =
+      `${data.total_jobs} ranked matches for ${data.profile_name} — updated ${generated.toLocaleString()}`;
+
+    const sources = [...new Set(allJobs.map(j => j.source))].sort();
+    const sel = document.getElementById('sourceFilter');
+    for (const s of sources) {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    }
+
+    document.getElementById('footer').textContent =
+      'Refreshed daily via GitHub Actions. Scoring is keyword-based against your resume profile — see config/profile.py to tune it. Checking a job as applied only affects this browser.';
+
+    render();
+  })
+  .catch(() => {
+    document.getElementById('subhead').textContent = 'jobs.json not found yet — it appears after the first scan runs.';
+  });
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('sourceFilter').addEventListener('change', render);
+document.getElementById('minScore').addEventListener('change', render);
+</script>
+</body>
+</html>
