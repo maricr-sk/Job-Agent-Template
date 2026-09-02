@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT))
 from config.profile import PROFILE as BASE_PROFILE
 from src import fetch_greenhouse, fetch_lever, fetch_ashby, fetch_adzuna, fetch_github_lists
 from src.scorer import rank_jobs
+from src.claude_scorer import score_with_claude, sort_by_claude_score
 
 # Search terms for the Adzuna aggregator — built from my target roles
 # and priority topics so it isn't just "software engineer" noise.
@@ -40,7 +41,6 @@ ADZUNA_QUERIES = [
     "machine learning engineer entry level",
     "AI research engineer entry level",
 ]
-
 
 def load_companies():
     with open(ROOT / "config" / "companies.yaml") as f:
@@ -100,6 +100,18 @@ def main():
     threshold = profile.get("min_score_threshold", 0)
     ranked = [j for j in ranked if j["score"] >= threshold]
     print(f"After {threshold}+ score threshold: {len(ranked)}")
+
+    # Optional second pass: re-score the top N keyword matches with Claude
+    # for actual semantic judgment against your resume. No-ops cleanly if
+    # ANTHROPIC_API_KEY or resume_text isn't set — everything below stays
+    # on keyword scoring alone either way.
+    rescore_n = profile.get("claude_rescore_top_n", 100)
+    top_slice = ranked[:rescore_n]
+    rest = ranked[rescore_n:]
+    if top_slice:
+        score_with_claude(top_slice, profile.get("resume_text", ""))
+        top_slice = sort_by_claude_score(top_slice)
+    ranked = top_slice + rest
 
     output = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
