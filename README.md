@@ -16,8 +16,8 @@ gh repo create <repo_name> --public --source=. --push
 ### 2. Get a free Adzuna API key
 Sign up: https://developer.adzuna.com/
 
-app_id: ______________
-app_key: ______________
+app_id: ______________  
+app_key: ______________  
 
 ### 3. Fill in your real profile (kept private)
 Copy this, fill in your values, keep it somewhere for step 4 — do not
@@ -37,9 +37,9 @@ priority_topics, etc.) — only include what you want to override.
 ### 4. Add repo secrets
 Settings → Secrets and variables → Actions → New repository secret:
 
-ADZUNA_APP_ID = ______________ (from step 2)
-ADZUNA_APP_KEY = ______________ (from step 2)
-PROFILE_OVERRIDE_JSON = ______________ (the JSON from step 3)
+ADZUNA_APP_ID = ______________ (from step 2)  
+ADZUNA_APP_KEY = ______________ (from step 2)  
+PROFILE_OVERRIDE_JSON = ______________ (the JSON from step 3)  
 
 
 ### 5. Enable GitHub Pages
